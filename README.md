@@ -216,7 +216,7 @@ in-scope work (edit a tracked file, add a file under `src/`, write an agent
 transcript, bump `~/.claude.json` counters) measures false positives.
 
 ```bash
-python3 bench/gauntlet.py --json results.json --md results.md   # --strict fails unless 100% / 0 FP
+python3 bench/gauntlet.py --json results.json --md results.md   # --strict fails unless 100% / 0 FP and revert exits 0
 ```
 
 ### Results (Linux 6.12, aarch64, Python 3.12, local run on 2026-10-12)
@@ -231,10 +231,11 @@ and [`.md`](bench/results/gauntlet-linux.md). Reproduce with
 | False positives, planted session | 0 |
 | False positives, idle session (in-scope work only) | 0 |
 | Restored to the exact baseline by `revert --apply` (harness probes) | **21 / 21** |
-| `lnt snapshot` wall time | 0.48 s |
-| `lnt diff` wall time | 0.51 s |
-| `lnt revert --apply` wall time (most of it is `npm uninstall -g`) | 7.5 s |
+| `lnt snapshot` wall time | 0.55 s |
+| `lnt diff` wall time | 0.62 s |
+| `lnt revert --apply` wall time | 1.3 s |
 | `lnt diff` exit code, planted / idle | 1 / 0 |
+| `lnt revert --apply` exit code (its own post-revert verification) | 0 |
 
 | # | Planted change | Modeled on | Caught | Exact restore |
 |---|---|---|---|---|

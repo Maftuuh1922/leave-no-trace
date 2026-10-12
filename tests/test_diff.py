@@ -92,3 +92,38 @@ def test_scope_helpers():
     assert in_scope("docs", ["docs/"])
     assert not in_scope("tmpclaude-x", ["src/**"])
     assert matches_any(["process:node"], ["process:no*"]) == "process:no*"
+
+
+def test_wrapper_ancestors_recorded_in_snapshot_are_not_leftovers():
+    # `timeout 90 lnt diff` run from the repo: the collector drops lnt's own record, so the
+    # diff cannot walk ppid from lnt to the wrapper. The snapshot carries the chain instead.
+    procs_after = {
+        "20:5": {"pid": 20, "ppid": 1, "pgid": 20, "uid": 1, "start": 5, "comm": "timeout", "cmd": "timeout 90 lnt diff", "cwd": "/r", "state": "S"},
+        "21:5": {"pid": 21, "ppid": 20, "pgid": 20, "uid": 1, "start": 5, "comm": "sh", "cmd": "sh -c lnt diff /r", "cwd": "/r", "state": "S"},
+        "30:5": {"pid": 30, "ppid": 1, "pgid": 30, "uid": 1, "start": 5, "comm": "node", "cmd": "node dev", "cwd": "/r", "state": "S"},
+    }
+    after = snap({"process": procs_after, "port": {}}, pid=22)
+    after["self_pids"] = [22, 21, 20, 1]
+    d = compute_diff(snap({"process": {}, "port": {}}), after)
+    pids = [f["after"]["pid"] for f in d["findings"] if f["category"] == "process"]
+    assert pids == [30]
+
+
+def test_ancestor_pids_walks_ppid_chain():
+    from lnt.collectors import ancestor_pids
+    procs = {5: {"ppid": 4}, 4: {"ppid": 3}, 3: {"ppid": 1}, 1: {"ppid": 0}, 9: {"ppid": 1}}
+    assert ancestor_pids(procs, 5) == [5, 4, 3, 1]
+
+
+def test_verify_counts_a_stopped_but_unreaped_process_as_gone():
+    from lnt.revert import verify
+    rec = {"pid": 40, "ppid": 2, "pgid": 40, "uid": 1, "start": 5, "comm": "py", "cmd": "py", "cwd": "/r", "state": "S"}
+    finding = {"id": "process:py:40", "category": "process", "key": "40:5", "after": rec}
+    zombie_rec = dict(rec, state="Z")
+    before = snap({"process": {}})
+    # killed, but its parent has not reaped it yet: it has exited, so it is back at baseline
+    assert verify({"findings": [finding]}, before, snap({"process": {"40:5": zombie_rec}})) == {"process:py:40": True}
+    assert verify({"findings": [finding]}, before, snap({"process": {"40:5": rec}})) == {"process:py:40": False}
+    # a finding that was already a zombie is only fixed once the entry is gone
+    zf = dict(finding, after=zombie_rec)
+    assert verify({"findings": [zf]}, before, snap({"process": {"40:5": zombie_rec}})) == {"process:py:40": False}

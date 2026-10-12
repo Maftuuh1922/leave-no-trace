@@ -149,3 +149,43 @@ def test_secret_files_are_hash_only(sandbox):
     assert not any(b"SECRET" in b.read_bytes() for b in backups if b.is_file())
     plan = lnt(sandbox, "revert").stdout
     assert "credentials" in plan
+
+
+WRAPPER = ("import os, subprocess, sys\n"
+           "sys.stderr.write('WRAPPER_PID=%d\\n' % os.getpid())\n"
+           "sys.exit(subprocess.call(sys.argv[1:]))\n")
+
+
+def test_wrapper_processes_are_not_reported(sandbox):
+    """`timeout 90 lnt diff` from inside the repo: the wrapper chain is lnt's ancestry, not a leftover."""
+    from conftest import ROOT
+    lnt(sandbox, "snapshot")
+    lnt_cmd = [sys.executable, os.path.join(ROOT, "scripts", "lnt"), "diff", "--format", "json"]
+    # two wrapper levels, both started after the baseline with their cwd in the repo
+    cmd = [sys.executable, "-c", WRAPPER, sys.executable, "-c", WRAPPER] + lnt_cmd
+    r = subprocess.run(cmd, cwd=str(sandbox["repo"]), capture_output=True, text=True, env=dict(os.environ), timeout=60)
+    wrappers = {int(line.split("=")[1]) for line in r.stderr.splitlines() if line.startswith("WRAPPER_PID=")}
+    assert len(wrappers) == 2, r.stderr
+    data = json.loads(r.stdout)
+    reported = {f["after"]["pid"] for f in data["diff"]["findings"] if f["category"] == "process"}
+    assert not (reported & wrappers), [f["title"] for f in data["diff"]["findings"] if f["category"] == "process"]
+    assert r.returncode == 0, [f["title"] for f in data["diff"]["findings"]]
+
+
+def test_revert_exit_zero_when_stopped_process_is_not_reaped_yet(sandbox):
+    """A process lnt stops stays a zombie until its own parent reaps it; that is not a failed revert."""
+    lnt(sandbox, "snapshot")
+    p = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], cwd=str(sandbox["repo"]),
+                         start_new_session=True)
+    try:
+        time.sleep(0.5)
+        assert lnt(sandbox, "diff").returncode == 1
+        # this test process is the parent and is blocked in subprocess.run, so the child stays unreaped
+        r = lnt(sandbox, "revert", "--apply", "--format", "json")
+        assert r.returncode == 0, r.stdout + r.stderr
+        report = json.loads(r.stdout)
+        assert all(report["verified"].values()), report["verified"]
+        assert p.wait(timeout=5) is not None
+    finally:
+        if p.poll() is None:
+            p.kill()

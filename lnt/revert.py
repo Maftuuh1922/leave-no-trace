@@ -208,6 +208,14 @@ def _proc_matches(pid, start, uid):
     return rec
 
 
+def _still_running(pid, start, uid):
+    """True while the process has not exited. A process that exited but whose parent has not
+    reaped it yet shows up as a zombie (state Z): it is no longer running, and only its parent
+    can remove the table entry, so it counts as stopped."""
+    rec = _proc_matches(pid, start, uid)
+    return bool(rec) and rec.get("state") != "Z"
+
+
 def apply_plan(actions, session, before_snapshot):
     trash_root = os.path.join(session, "trash", time.strftime("%Y%m%d-%H%M%S"))
     backup_dir = os.path.join(session, "backup")
@@ -312,7 +320,7 @@ def _apply_one(a, trash_root, backup_dir, baseline_pgids):
         group = a.get("pgid") == a["pid"] and a["pid"] not in baseline_pgids
         _signal(a["pid"], targets, group, signal.SIGTERM)
         for _ in range(30):
-            if not _proc_matches(a["pid"], a.get("start"), a.get("uid")):
+            if not _still_running(a["pid"], a.get("start"), a.get("uid")):
                 return {"status": "done", "detail": "SIGTERM" + (" to process group" if group else "")}
             time.sleep(0.1)
         _signal(a["pid"], targets, group, signal.SIGKILL)
@@ -356,7 +364,12 @@ def verify(diff, before, after2):
         cat, key = f["category"], f["key"]
         if cat == "process":
             pid, start = f["after"]["pid"], f["after"]["start"]
-            alive = any(r["pid"] == pid and abs(r["start"] - start) <= 1 for r in a_items.get("process", {}).values())
+            was_zombie = f["after"].get("state") == "Z"
+            # A process we stopped may linger as a zombie until its own parent reaps it; it has
+            # exited, so it is back at baseline. A finding that was already a zombie is not fixed
+            # until the entry is actually gone.
+            alive = any(r["pid"] == pid and abs(r["start"] - start) <= 1 and (was_zombie or r.get("state") != "Z")
+                        for r in a_items.get("process", {}).values())
             out[f["id"]] = not alive
             continue
         b = b_items.get(cat, {}).get(key)

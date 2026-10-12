@@ -147,7 +147,9 @@ def compute_diff(before, after, extra_ignores=(), all_processes=False):
     notes = []
 
     a_procs = {r["pid"]: r for r in a_items.get("process", {}).values()}
+    # lnt's own process and its ancestors (shell, `timeout`, agent tool runner ...) in either snapshot
     excluded = _ancestors(a_procs, after.get("pid")) | {after.get("pid"), before.get("pid")}
+    excluded |= set(after.get("self_pids") or []) | set(before.get("self_pids") or [])
 
     new_ports = {}
     for key, rec in a_items.get("port", {}).items():

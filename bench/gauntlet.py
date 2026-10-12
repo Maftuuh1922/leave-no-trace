@@ -496,6 +496,7 @@ def to_markdown(res):
     lines.append("| `lnt snapshot` wall time | %.2f s |" % res["seconds"]["snapshot"])
     lines.append("| `lnt diff` wall time | %.2f s |" % res["seconds"]["diff"])
     lines.append("| `lnt diff` exit code (planted / idle) | %d / %d |" % (res["diff_exit_code"], res["idle"]["exit_code"]))
+    lines.append("| `lnt revert --apply` exit code | %d |" % res["revert_exit_code"])
     lines.append("")
     lines.append("| # | Planted change | Modeled on | Caught | Exact restore |")
     lines.append("|---|---|---|---|---|")
@@ -525,7 +526,7 @@ def main():
     ap.add_argument("--md", help="write the markdown summary here")
     ap.add_argument("--keep", action="store_true", help="keep the sandbox directory for inspection")
     ap.add_argument("--idle-seconds", type=float, default=2.0)
-    ap.add_argument("--strict", action="store_true", help="exit 1 unless everything tested is caught and restored with 0 false positives")
+    ap.add_argument("--strict", action="store_true", help="exit 1 unless everything tested is caught and restored with 0 false positives and `lnt revert --apply` exits 0")
     a = ap.parse_args()
     res = run_gauntlet(a.idle_seconds, a.keep)
     md = to_markdown(res)
@@ -541,7 +542,10 @@ def main():
             fh.write(md)
     if a.strict:
         n = res["planted_tested"]
-        ok = res["caught"] == n and res["restored_exact"] == n and res["false_positives"] == 0 and res["idle"]["false_positives"] == 0
+        ok = (res["caught"] == n and res["restored_exact"] == n and res["false_positives"] == 0
+              and res["idle"]["false_positives"] == 0 and res["revert_exit_code"] == 0)
+        if not ok:
+            print("gauntlet --strict: FAILED (revert exit code %s)" % res["revert_exit_code"], file=sys.stderr)
         return 0 if ok else 1
     return 0
 

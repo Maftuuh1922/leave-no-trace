@@ -73,6 +73,7 @@ class Ctx:
         self.cfg = cfg
         self.backup_dir = backup_dir
         self.status = {}
+        self.self_pids = []
 
     def backup(self, path: str, rec: dict, data: bytes | None = None) -> None:
         if not self.backup_dir or not self.cfg.backup:
@@ -521,12 +522,30 @@ def list_listening():
     return ports
 
 
+def ancestor_pids(procs, pid):
+    """pid and every ancestor reachable through the ppid chain in ``procs`` (stops at a missing parent)."""
+    chain = []
+    seen = set()
+    while pid and pid not in seen:
+        seen.add(pid)
+        chain.append(pid)
+        rec = procs.get(pid)
+        if not rec:
+            break
+        pid = rec.get("ppid")
+    return chain
+
+
 def collect_processes(ctx: Ctx):
     procs = list_processes()
     if not procs:
         ctx.status["processes"] = "unavailable"
         return {}
     me = os.getpid()
+    # lnt itself and whatever launched it (a shell, `timeout`, an agent's tool runner ...) are not
+    # leftovers. Walk the chain here, while our own record is still in the table: the diff only
+    # sees the filtered items and could not get past our PID to the wrapper above it.
+    ctx.self_pids = ancestor_pids(procs, me)
     out = {}
     for pid, rec in procs.items():
         if pid == me:
@@ -658,6 +677,7 @@ def take_snapshot(cfg: Config, backup_dir=None, label="before"):
         "taken_at": int(time.time()),
         "platform": sys.platform,
         "pid": os.getpid(),
+        "self_pids": ctx.self_pids,
         "config": cfg.to_dict(),
         "status": ctx.status,
         "timings": timings,

@@ -15,13 +15,13 @@
  "fp_ids": [],
  "restored_exact": 21,
  "plan_actions": 24,
- "revert_exit_code": 1,
+ "revert_exit_code": 0,
  "post_revert_diff_findings": [],
  "seconds": {
-  "snapshot": 0.48,
-  "diff": 0.51,
-  "revert_apply": 7.46,
-  "snapshot_internal": 0.441
+  "snapshot": 0.55,
+  "diff": 0.62,
+  "revert_apply": 1.32,
+  "snapshot_internal": 0.505
  },
  "rows": [
   {
@@ -58,7 +58,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "tmp:/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1a2b-cwd"
+    "tmp:/tmp/lnt-gauntlet-_rzf_5zk/tmp/claude-1a2b-cwd"
    ],
    "restored_exact": true
   },
@@ -70,7 +70,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "tmp:/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1000"
+    "tmp:/tmp/lnt-gauntlet-_rzf_5zk/tmp/claude-1000"
    ],
    "restored_exact": true
   },
@@ -94,7 +94,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.gitconfig",
+    "dotfile:/tmp/lnt-gauntlet-_rzf_5zk/home/.gitconfig",
     "gitconfig:user.email"
    ],
    "restored_exact": true
@@ -107,7 +107,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.config/git/ignore"
+    "dotfile:/tmp/lnt-gauntlet-_rzf_5zk/home/.config/git/ignore"
    ],
    "restored_exact": true
   },
@@ -119,7 +119,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.gitconfig",
+    "dotfile:/tmp/lnt-gauntlet-_rzf_5zk/home/.gitconfig",
     "gitconfig:credential.https://github.com.helper"
    ],
    "restored_exact": true
@@ -132,7 +132,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/repo/.git/config"
+    "agentconfig:/tmp/lnt-gauntlet-_rzf_5zk/repo/.git/config"
    ],
    "restored_exact": true
   },
@@ -144,7 +144,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/repo/.codex/config.toml",
+    "agentconfig:/tmp/lnt-gauntlet-_rzf_5zk/repo/.codex/config.toml",
     "repo.untracked:.codex/config.toml"
    ],
    "restored_exact": true
@@ -181,7 +181,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.bashrc"
+    "dotfile:/tmp/lnt-gauntlet-_rzf_5zk/home/.bashrc"
    ],
    "restored_exact": true
   },
@@ -193,7 +193,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.claude.json#mcp"
+    "agentconfig:/tmp/lnt-gauntlet-_rzf_5zk/home/.claude.json#mcp"
    ],
    "restored_exact": true
   },
@@ -205,7 +205,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.claude/settings.json"
+    "agentconfig:/tmp/lnt-gauntlet-_rzf_5zk/home/.claude/settings.json"
    ],
    "restored_exact": true
   },
@@ -217,7 +217,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.cursor/mcp.json"
+    "agentconfig:/tmp/lnt-gauntlet-_rzf_5zk/home/.cursor/mcp.json"
    ],
    "restored_exact": true
   },
@@ -230,8 +230,8 @@
    ],
    "caught": true,
    "finding_ids": [
-    "port:tcp:33875",
-    "process:python3:2666"
+    "port:tcp:39969",
+    "process:python3:2716"
    ],
    "restored_exact": true
   },
@@ -245,7 +245,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "process:python3:2667"
+    "process:python3:2718"
    ],
    "restored_exact": true
   },
@@ -269,7 +269,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "unit:/tmp/lnt-gauntlet-s1hcbb5v/home/.config/systemd/user/agent-sync.service"
+    "unit:/tmp/lnt-gauntlet-_rzf_5zk/home/.config/systemd/user/agent-sync.service"
    ],
    "restored_exact": true
   },
@@ -281,7 +281,7 @@
    ],
    "caught": true,
    "finding_ids": [
-    "docker.container:a326baadd95f1617f72a489e4f3e423706193534939b3bf8960906cdbac40e3e"
+    "docker.container:dd57961db5940833836b7346e8fc5d44464cd04d94cb8814052fe5c5e3913f87"
    ],
    "restored_exact": true
   }
@@ -289,31 +289,31 @@
  "revert_results": [
   {
    "n": 1,
-   "finding": "process:python3:2666",
+   "finding": "process:python3:2716",
    "kind": "kill",
    "status": "done",
-   "detail": "SIGKILL after SIGTERM timed out"
+   "detail": "SIGTERM to process group"
   },
   {
    "n": 2,
-   "finding": "process:python3:2667",
+   "finding": "process:python3:2718",
    "kind": "kill",
    "status": "done",
-   "detail": "SIGKILL after SIGTERM timed out"
+   "detail": "SIGTERM to process group"
   },
   {
    "n": 3,
-   "finding": "docker.container:a326baadd95f1617f72a489e4f3e423706193534939b3bf8960906cdbac40e3e",
+   "finding": "docker.container:dd57961db5940833836b7346e8fc5d44464cd04d94cb8814052fe5c5e3913f87",
    "kind": "command",
    "status": "done",
-   "detail": "a326baadd95f1617f72a489e4f3e423706193534939b3bf8960906cdbac40e3e"
+   "detail": "dd57961db5940833836b7346e8fc5d44464cd04d94cb8814052fe5c5e3913f87"
   },
   {
    "n": 4,
    "finding": "pkg.npm:lnt-demo-cli",
    "kind": "command",
    "status": "done",
-   "detail": "removed 1 package in 168ms"
+   "detail": "removed 1 package in 188ms"
   },
   {
    "n": 5,
@@ -331,60 +331,60 @@
   },
   {
    "n": 7,
-   "finding": "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.claude.json#mcp",
+   "finding": "agentconfig:/tmp/lnt-gauntlet-_rzf_5zk/home/.claude.json#mcp",
    "kind": "restore",
    "status": "done",
    "detail": "MCP/hook sections restored; full previous file copied to trash"
   },
   {
    "n": 8,
-   "finding": "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.claude/settings.json",
+   "finding": "agentconfig:/tmp/lnt-gauntlet-_rzf_5zk/home/.claude/settings.json",
    "kind": "restore",
    "status": "done"
   },
   {
    "n": 9,
-   "finding": "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.cursor/mcp.json",
+   "finding": "agentconfig:/tmp/lnt-gauntlet-_rzf_5zk/home/.cursor/mcp.json",
    "kind": "trash",
    "status": "done",
-   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/home/.cursor/mcp.json"
+   "detail": "moved to /tmp/lnt-gauntlet-_rzf_5zk/state/repo-63f163bf9f19/default/trash/20261012-095237/tmp/lnt-gauntlet-_rzf_5zk/home/.cursor/mcp.json"
   },
   {
    "n": 10,
-   "finding": "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/repo/.codex/config.toml",
+   "finding": "agentconfig:/tmp/lnt-gauntlet-_rzf_5zk/repo/.codex/config.toml",
    "kind": "trash",
    "status": "done",
-   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/repo/.codex/config.toml"
+   "detail": "moved to /tmp/lnt-gauntlet-_rzf_5zk/state/repo-63f163bf9f19/default/trash/20261012-095237/tmp/lnt-gauntlet-_rzf_5zk/repo/.codex/config.toml"
   },
   {
    "n": 11,
-   "finding": "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/repo/.git/config",
+   "finding": "agentconfig:/tmp/lnt-gauntlet-_rzf_5zk/repo/.git/config",
    "kind": "restore",
    "status": "done"
   },
   {
    "n": 12,
-   "finding": "unit:/tmp/lnt-gauntlet-s1hcbb5v/home/.config/systemd/user/agent-sync.service",
+   "finding": "unit:/tmp/lnt-gauntlet-_rzf_5zk/home/.config/systemd/user/agent-sync.service",
    "kind": "trash",
    "status": "done",
-   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/home/.config/systemd/user/agent-sync.service"
+   "detail": "moved to /tmp/lnt-gauntlet-_rzf_5zk/state/repo-63f163bf9f19/default/trash/20261012-095237/tmp/lnt-gauntlet-_rzf_5zk/home/.config/systemd/user/agent-sync.service"
   },
   {
    "n": 13,
-   "finding": "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.bashrc",
+   "finding": "dotfile:/tmp/lnt-gauntlet-_rzf_5zk/home/.bashrc",
    "kind": "restore",
    "status": "done"
   },
   {
    "n": 14,
-   "finding": "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.config/git/ignore",
+   "finding": "dotfile:/tmp/lnt-gauntlet-_rzf_5zk/home/.config/git/ignore",
    "kind": "trash",
    "status": "done",
-   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/home/.config/git/ignore"
+   "detail": "moved to /tmp/lnt-gauntlet-_rzf_5zk/state/repo-63f163bf9f19/default/trash/20261012-095237/tmp/lnt-gauntlet-_rzf_5zk/home/.config/git/ignore"
   },
   {
    "n": 15,
-   "finding": "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.gitconfig",
+   "finding": "dotfile:/tmp/lnt-gauntlet-_rzf_5zk/home/.gitconfig",
    "kind": "restore",
    "status": "done"
   },
@@ -399,42 +399,42 @@
    "finding": "repo.untracked:.sandbox-stub",
    "kind": "trash",
    "status": "done",
-   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/repo/.sandbox-stub"
+   "detail": "moved to /tmp/lnt-gauntlet-_rzf_5zk/state/repo-63f163bf9f19/default/trash/20261012-095237/tmp/lnt-gauntlet-_rzf_5zk/repo/.sandbox-stub"
   },
   {
    "n": 18,
    "finding": "repo.untracked:.tmp_bash_7e3c",
    "kind": "trash",
    "status": "done",
-   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/repo/.tmp_bash_7e3c"
+   "detail": "moved to /tmp/lnt-gauntlet-_rzf_5zk/state/repo-63f163bf9f19/default/trash/20261012-095237/tmp/lnt-gauntlet-_rzf_5zk/repo/.tmp_bash_7e3c"
   },
   {
    "n": 19,
    "finding": "repo.untracked:tmpclaude-3f9a-cwd",
    "kind": "trash",
    "status": "done",
-   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/repo/tmpclaude-3f9a-cwd"
+   "detail": "moved to /tmp/lnt-gauntlet-_rzf_5zk/state/repo-63f163bf9f19/default/trash/20261012-095237/tmp/lnt-gauntlet-_rzf_5zk/repo/tmpclaude-3f9a-cwd"
   },
   {
    "n": 20,
-   "finding": "tmp:/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1000",
+   "finding": "tmp:/tmp/lnt-gauntlet-_rzf_5zk/tmp/claude-1000",
    "kind": "trash",
    "status": "done",
-   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1000"
+   "detail": "moved to /tmp/lnt-gauntlet-_rzf_5zk/state/repo-63f163bf9f19/default/trash/20261012-095237/tmp/lnt-gauntlet-_rzf_5zk/tmp/claude-1000"
   },
   {
    "n": 21,
-   "finding": "tmp:/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1a2b-cwd",
+   "finding": "tmp:/tmp/lnt-gauntlet-_rzf_5zk/tmp/claude-1a2b-cwd",
    "kind": "trash",
    "status": "done",
-   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1a2b-cwd"
+   "detail": "moved to /tmp/lnt-gauntlet-_rzf_5zk/state/repo-63f163bf9f19/default/trash/20261012-095237/tmp/lnt-gauntlet-_rzf_5zk/tmp/claude-1a2b-cwd"
   },
   {
    "n": 22,
-   "finding": "port:tcp:33875",
+   "finding": "port:tcp:39969",
    "kind": "covered",
    "status": "skipped",
-   "detail": "covered by stopping the process that owns port 33875"
+   "detail": "covered by stopping the process that owns port 39969"
   },
   {
    "n": 23,
@@ -458,12 +458,12 @@
   "gitconfig": "ok",
   "pkg.npm": "ok",
   "pkg.pnpm": "ok",
-  "pkg.pip": "ok (/tmp/lnt-gauntlet-s1hcbb5v/venv/bin/python)",
+  "pkg.pip": "ok (/tmp/lnt-gauntlet-_rzf_5zk/venv/bin/python)",
   "pkg.uv": "ok",
   "processes": "ok (7 procs, 1 listening ports)",
   "docker": "ok",
   "cron": "ok",
-  "units": "ok (/tmp/lnt-gauntlet-s1hcbb5v/home/.config/systemd/user)",
-  "tmp": "ok (/tmp/lnt-gauntlet-s1hcbb5v/tmp)"
+  "units": "ok (/tmp/lnt-gauntlet-_rzf_5zk/home/.config/systemd/user)",
+  "tmp": "ok (/tmp/lnt-gauntlet-_rzf_5zk/tmp)"
  }
 }

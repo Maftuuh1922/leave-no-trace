@@ -8,9 +8,10 @@ Platform: Linux 6.12.110+ (aarch64), python 3.12.15
 | False positives, planted session | 0 |
 | False positives, idle session (in-scope work only) | 0 |
 | Restored to exact baseline by `revert --apply` | **21 / 21** |
-| `lnt snapshot` wall time | 0.48 s |
-| `lnt diff` wall time | 0.51 s |
+| `lnt snapshot` wall time | 0.55 s |
+| `lnt diff` wall time | 0.62 s |
 | `lnt diff` exit code (planted / idle) | 1 / 0 |
+| `lnt revert --apply` exit code | 0 |
 
 | # | Planted change | Modeled on | Caught | Exact restore |
 |---|---|---|---|---|
