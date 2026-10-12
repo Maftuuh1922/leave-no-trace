@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "leave-no-trace"
+version = "0.1.0"
+description = "Snapshot the machine before an agent session, diff after, and plan a revert of what it left behind."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+authors = [{ name = "muhammad_maftuh" }]
+dependencies = []
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
+  "Environment :: Console",
+]
+
+[project.urls]
+Homepage = "https://github.com/Maftuuh1922/leave-no-trace"
+
+[project.scripts]
+lnt = "lnt.cli:main"
+
+[tool.setuptools]
+packages = ["lnt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

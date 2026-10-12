@@ -1,0 +1,469 @@
+{
+ "platform": "Linux 6.12.110+ (aarch64), python 3.12.15",
+ "idle": {
+  "exit_code": 0,
+  "false_positives": 0,
+  "fp_ids": [],
+  "in_scope_seen": 3
+ },
+ "diff_exit_code": 1,
+ "receipt_headline": "This session left 24 things outside the requested work: 5 agent config/hook changes, 2 scheduled jobs/services, 4 running processes/ports/containers, 7 global environment changes, 6 leftover files.",
+ "planted_total": 21,
+ "planted_tested": 21,
+ "caught": 21,
+ "false_positives": 0,
+ "fp_ids": [],
+ "restored_exact": 21,
+ "plan_actions": 24,
+ "revert_exit_code": 1,
+ "post_revert_diff_findings": [],
+ "seconds": {
+  "snapshot": 0.48,
+  "diff": 0.51,
+  "revert_apply": 7.46,
+  "snapshot_internal": 0.441
+ },
+ "rows": [
+  {
+   "id": "tmpclaude-cwd",
+   "title": "tmpclaude-*-cwd file in the repo",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/17600",
+    "https://github.com/anthropics/claude-code/issues/17636",
+    "https://github.com/anthropics/claude-code/issues/17568"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "repo.untracked:tmpclaude-3f9a-cwd"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "empty-readonly-dotfile",
+   "title": "empty read-only dotfile in the working dir",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/17087"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "repo.untracked:.tmp_bash_7e3c"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "tmp-cwd-tracker",
+   "title": "/tmp/claude-*-cwd tracking file never cleaned",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/8856"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "tmp:/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1a2b-cwd"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "tmp-task-output",
+   "title": "task .output files piling up in /tmp/claude-{uid}",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/26911"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "tmp:/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1000"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "sandbox-stub",
+   "title": "empty sandbox stub file left in the repo",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/78419"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "repo.untracked:.sandbox-stub"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "git-user-email",
+   "title": "git config --global user.email overwritten",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/37201"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.gitconfig",
+    "gitconfig:user.email"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "git-global-ignore",
+   "title": "~/.config/git/ignore created",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/10230"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.config/git/ignore"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "git-credential-helper",
+   "title": "global git credential helper replaced (gh auth setup-git)",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/50232"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.gitconfig",
+    "gitconfig:credential.https://github.com.helper"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "repo-hookspath",
+   "title": "core.hooksPath written into the repo's .git/config",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/60957"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/repo/.git/config"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "project-codex-config",
+   "title": "project .codex/config.toml modified by the agent",
+   "source": [
+    "https://github.com/openai/codex/issues/15680"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/repo/.codex/config.toml",
+    "repo.untracked:.codex/config.toml"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "npm-global",
+   "title": "global npm package installed",
+   "source": [
+    "(global installs; see report)"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "pkg.npm:lnt-demo-cli"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "pip-into-interpreter",
+   "title": "pip install into the interpreter's own site-packages",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/48992"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "pkg.pip:lnt-demo-pkg"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "bashrc-path",
+   "title": "~/.bashrc PATH line appended",
+   "source": [
+    "(global env; see report)"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.bashrc"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "claude-json-mcp",
+   "title": "MCP server injected into ~/.claude.json",
+   "source": [
+    "https://workos.com/blog/npm-worm-coding-agent-config-credentials"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.claude.json#mcp"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "claude-settings-hook",
+   "title": "SessionStart hook added to ~/.claude/settings.json",
+   "source": [
+    "https://thehackernews.com/2026/09/malicious-git-configs-can-make-claude.html"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.claude/settings.json"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "cursor-mcp",
+   "title": "~/.cursor/mcp.json created",
+   "source": [
+    "https://workos.com/blog/npm-worm-coding-agent-config-credentials"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.cursor/mcp.json"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "orphan-dev-server",
+   "title": "dev server left listening after the session",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/50544",
+    "https://github.com/anthropics/claude-code/issues/22612"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "port:tcp:33875",
+    "process:python3:2666"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "orphan-process",
+   "title": "orphaned background process still running",
+   "source": [
+    "https://github.com/anthropics/claude-code/issues/19433",
+    "https://github.com/anthropics/claude-code/issues/17391",
+    "https://github.com/anthropics/claude-code/issues/1935"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "process:python3:2667"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "crontab-entry",
+   "title": "crontab entry added (persistence)",
+   "source": [
+    "https://labs.cloudsecurityalliance.org/wp-content/uploads/2026/09/CSA_research_note_ai_coding_agent_git_config_rce_20260904-csa-styled.pdf"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "cron:a2e2dcf42e66e7ce"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "user-service",
+   "title": "user-level service unit / LaunchAgent created",
+   "source": [
+    "(persistence; see report)"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "unit:/tmp/lnt-gauntlet-s1hcbb5v/home/.config/systemd/user/agent-sync.service"
+   ],
+   "restored_exact": true
+  },
+  {
+   "id": "docker-container",
+   "title": "docker container left behind",
+   "source": [
+    "(running state; see report)"
+   ],
+   "caught": true,
+   "finding_ids": [
+    "docker.container:a326baadd95f1617f72a489e4f3e423706193534939b3bf8960906cdbac40e3e"
+   ],
+   "restored_exact": true
+  }
+ ],
+ "revert_results": [
+  {
+   "n": 1,
+   "finding": "process:python3:2666",
+   "kind": "kill",
+   "status": "done",
+   "detail": "SIGKILL after SIGTERM timed out"
+  },
+  {
+   "n": 2,
+   "finding": "process:python3:2667",
+   "kind": "kill",
+   "status": "done",
+   "detail": "SIGKILL after SIGTERM timed out"
+  },
+  {
+   "n": 3,
+   "finding": "docker.container:a326baadd95f1617f72a489e4f3e423706193534939b3bf8960906cdbac40e3e",
+   "kind": "command",
+   "status": "done",
+   "detail": "a326baadd95f1617f72a489e4f3e423706193534939b3bf8960906cdbac40e3e"
+  },
+  {
+   "n": 4,
+   "finding": "pkg.npm:lnt-demo-cli",
+   "kind": "command",
+   "status": "done",
+   "detail": "removed 1 package in 168ms"
+  },
+  {
+   "n": 5,
+   "finding": "pkg.pip:lnt-demo-pkg",
+   "kind": "command",
+   "status": "done",
+   "detail": "Found existing installation: lnt-demo-pkg 0.1.0\nUninstalling lnt-demo-pkg-0.1.0:\n  Successfully uninstalled lnt-demo-pkg-0.1.0"
+  },
+  {
+   "n": 6,
+   "finding": "cron:a2e2dcf42e66e7ce",
+   "kind": "crontab",
+   "status": "done",
+   "detail": ""
+  },
+  {
+   "n": 7,
+   "finding": "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.claude.json#mcp",
+   "kind": "restore",
+   "status": "done",
+   "detail": "MCP/hook sections restored; full previous file copied to trash"
+  },
+  {
+   "n": 8,
+   "finding": "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.claude/settings.json",
+   "kind": "restore",
+   "status": "done"
+  },
+  {
+   "n": 9,
+   "finding": "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/home/.cursor/mcp.json",
+   "kind": "trash",
+   "status": "done",
+   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/home/.cursor/mcp.json"
+  },
+  {
+   "n": 10,
+   "finding": "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/repo/.codex/config.toml",
+   "kind": "trash",
+   "status": "done",
+   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/repo/.codex/config.toml"
+  },
+  {
+   "n": 11,
+   "finding": "agentconfig:/tmp/lnt-gauntlet-s1hcbb5v/repo/.git/config",
+   "kind": "restore",
+   "status": "done"
+  },
+  {
+   "n": 12,
+   "finding": "unit:/tmp/lnt-gauntlet-s1hcbb5v/home/.config/systemd/user/agent-sync.service",
+   "kind": "trash",
+   "status": "done",
+   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/home/.config/systemd/user/agent-sync.service"
+  },
+  {
+   "n": 13,
+   "finding": "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.bashrc",
+   "kind": "restore",
+   "status": "done"
+  },
+  {
+   "n": 14,
+   "finding": "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.config/git/ignore",
+   "kind": "trash",
+   "status": "done",
+   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/home/.config/git/ignore"
+  },
+  {
+   "n": 15,
+   "finding": "dotfile:/tmp/lnt-gauntlet-s1hcbb5v/home/.gitconfig",
+   "kind": "restore",
+   "status": "done"
+  },
+  {
+   "n": 16,
+   "finding": "repo.untracked:.codex/config.toml",
+   "kind": "trash",
+   "status": "already-gone"
+  },
+  {
+   "n": 17,
+   "finding": "repo.untracked:.sandbox-stub",
+   "kind": "trash",
+   "status": "done",
+   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/repo/.sandbox-stub"
+  },
+  {
+   "n": 18,
+   "finding": "repo.untracked:.tmp_bash_7e3c",
+   "kind": "trash",
+   "status": "done",
+   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/repo/.tmp_bash_7e3c"
+  },
+  {
+   "n": 19,
+   "finding": "repo.untracked:tmpclaude-3f9a-cwd",
+   "kind": "trash",
+   "status": "done",
+   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/repo/tmpclaude-3f9a-cwd"
+  },
+  {
+   "n": 20,
+   "finding": "tmp:/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1000",
+   "kind": "trash",
+   "status": "done",
+   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1000"
+  },
+  {
+   "n": 21,
+   "finding": "tmp:/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1a2b-cwd",
+   "kind": "trash",
+   "status": "done",
+   "detail": "moved to /tmp/lnt-gauntlet-s1hcbb5v/state/repo-09deca0a3a57/default/trash/20261012-090419/tmp/lnt-gauntlet-s1hcbb5v/tmp/claude-1a2b-cwd"
+  },
+  {
+   "n": 22,
+   "finding": "port:tcp:33875",
+   "kind": "covered",
+   "status": "skipped",
+   "detail": "covered by stopping the process that owns port 33875"
+  },
+  {
+   "n": 23,
+   "finding": "gitconfig:credential.https://github.com.helper",
+   "kind": "covered",
+   "status": "skipped",
+   "detail": "covered by restoring the global git config file"
+  },
+  {
+   "n": 24,
+   "finding": "gitconfig:user.email",
+   "kind": "covered",
+   "status": "skipped",
+   "detail": "covered by restoring the global git config file"
+  }
+ ],
+ "collector_status": {
+  "repo": "ok",
+  "dotfiles": "ok",
+  "agentconfig": "ok",
+  "gitconfig": "ok",
+  "pkg.npm": "ok",
+  "pkg.pnpm": "ok",
+  "pkg.pip": "ok (/tmp/lnt-gauntlet-s1hcbb5v/venv/bin/python)",
+  "pkg.uv": "ok",
+  "processes": "ok (7 procs, 1 listening ports)",
+  "docker": "ok",
+  "cron": "ok",
+  "units": "ok (/tmp/lnt-gauntlet-s1hcbb5v/home/.config/systemd/user)",
+  "tmp": "ok (/tmp/lnt-gauntlet-s1hcbb5v/tmp)"
+ }
+}

@@ -1,0 +1,9 @@
+# Copy to <repo>/.lntignore or ~/.config/lnt/ignore.
+# One glob per line, matched against finding ids (shown by `lnt diff --format json`).
+# Examples:
+tmp:*/my-ide-cache-*
+process:node
+process:*language-server*
+package:npm:corepack
+repo.untracked:*.log
+agentconfig:*/.claude/skills/my-own-skill/*

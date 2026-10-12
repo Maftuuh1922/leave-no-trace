@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.9", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install pytest (the tool itself has no dependencies)
+        run: python -m pip install pytest
+      - name: Byte-compile
+        run: python -m compileall -q lnt scripts/lnt bench
+      - name: Unit + integration tests
+        run: python -m pytest -q
+      - name: Footprint Gauntlet benchmark
+        run: python bench/gauntlet.py --strict --json gauntlet-${{ matrix.os }}-py${{ matrix.python }}.json
+      - name: lnt doctor
+        run: python scripts/lnt doctor
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gauntlet-${{ matrix.os }}-py${{ matrix.python }}
+          path: gauntlet-*.json

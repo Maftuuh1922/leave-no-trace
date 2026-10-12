@@ -1,0 +1,8 @@
+{
+  "scope": ["src/**", "tests/**"],
+  "extra_files": ["~/.config/my-agent/config.json"],
+  "extra_dirs": ["~/.config/my-agent/hooks"],
+  "collectors": {"docker": true, "brew": true, "gem": false},
+  "backup": true,
+  "ignore": ["tmp:*/my-ide-cache-*"]
+}
