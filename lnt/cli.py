@@ -13,7 +13,7 @@ from .collectors import take_snapshot
 from .config import find_repo_root, load_config, session_dir
 from .diff import actionable, compute_diff
 from .receipt import headline, render
-from .revert import apply_plan, build_plan, verify
+from .revert import apply_plan, build_plan, irreversible, verify
 from .util import read_json, write_json
 
 EXIT_CLEAN, EXIT_FINDINGS, EXIT_ERROR, EXIT_NO_BASELINE = 0, 1, 2, 3
@@ -138,22 +138,54 @@ def cmd_revert(args):
     if args.only:
         import fnmatch
         plan = [a for a in plan if any(fnmatch.fnmatchcase(a["finding"], p) for p in args.only)]
+    risky = irreversible(plan)
     if not args.apply:
         if args.format == "json":
             print(json.dumps(plan, indent=1))
         else:
             print("lnt revert plan (dry run; nothing was changed). Re-run with --apply to execute.")
             for a in plan:
-                print("%3d. [%s] %s" % (a["n"], a["kind"], a["description"]))
+                tag = "" if a.get("reversible") else "  ! irreversible"
+                print("%3d. [%s] %s%s" % (a["n"], a["kind"], a["description"], tag))
                 print("      for: %s" % a["finding"])
             if not plan:
                 print("  (nothing to revert)")
+            if risky:
+                print("lnt: %d action(s) cannot be undone (stopping processes, uninstalling packages, removing docker"
+                      " objects); --apply asks before running them, or pass --yes." % len(risky))
         return EXIT_CLEAN
-    results, trash = apply_plan(plan, sess, before)
+    snap_uid = before.get("uid")
+    if snap_uid is not None and hasattr(os, "getuid") and os.getuid() != snap_uid:
+        print("lnt: refusing to revert: the baseline was taken as uid %s but this is uid %s (sudo?). "
+              "Run revert as the same user." % (snap_uid, os.getuid()), file=sys.stderr)
+        return EXIT_ERROR
+    refuse = set()
+    if risky and not args.yes:
+        if sys.stdin.isatty() and args.format == "text":
+            print("These actions cannot be undone:")
+            for a in risky:
+                print("%3d. %s\n      (%s)" % (a["n"], a["description"], a["undo"]))
+            try:
+                ans = input("Run them? [y]es / [s]kip them, revert the rest / [N]o, abort: ").strip().lower()
+            except EOFError:
+                ans = ""
+            if ans in ("y", "yes"):
+                pass
+            elif ans in ("s", "skip"):
+                refuse = {a["n"] for a in risky}
+            else:
+                print("lnt: aborted; nothing was changed.")
+                return EXIT_FINDINGS
+        else:
+            refuse = {a["n"] for a in risky}
+            print("lnt: %d irreversible action(s) refused without confirmation (no terminal to ask). "
+                  "Re-run with --yes to allow them." % len(refuse), file=sys.stderr)
+    results, trash = apply_plan(plan, sess, before, refuse=refuse)
     cfg = load_config(before["config"]["repo_root"], before["config"].get("scope"))
     cfg.tmp_dirs = before["config"]["tmp_dirs"]
     after2 = take_snapshot(cfg, backup_dir=None, label="after-revert")
-    targeted = {a["finding"] for a in plan if a["kind"] not in ("manual",)}
+    targeted = {a["finding"] for a in plan if a["kind"] not in ("manual",)} - {
+        r["finding"] for r in results if r["status"] == "refused"}
     checks = verify(diff, before, after2)
     report = {"results": results, "trash": trash, "verified": {k: v for k, v in checks.items() if k in targeted}}
     write_json(os.path.join(sess, "revert-report.json"), report)
@@ -162,10 +194,14 @@ def cmd_revert(args):
         print(json.dumps(report, indent=1))
     else:
         for r in results:
-            print("%3d. %-12s %s %s" % (r["n"], r["status"], r["finding"], ("- " + r["detail"]) if r.get("detail") else ""))
+            detail = (r.get("detail") or "").replace("moved to " + trash, "moved to trash: ")
+            print("%3d. %-12s %s%s" % (r["n"], r["status"], r["finding"], (" - " + detail) if detail else ""))
         print("lnt: %d/%d reverted item(s) verified back at their baseline state. Trash: %s" % (ok_n, len(report["verified"]), trash))
     manual = [a for a in plan if a["kind"] == "manual"]
-    return EXIT_CLEAN if ok_n == len(report["verified"]) and not manual else EXIT_FINDINGS
+    refused = [r for r in results if r["status"] == "refused"]
+    if refused and args.format == "text":
+        print("lnt: %d action(s) refused and left as they are." % len(refused))
+    return EXIT_CLEAN if ok_n == len(report["verified"]) and not manual and not refused else EXIT_FINDINGS
 
 
 def cmd_run(args):
@@ -229,8 +265,12 @@ def build_parser():
     sp = sub.add_parser("revert", help="show (default) or apply the revert plan for the last diff")
     common(sp)
     g = sp.add_mutually_exclusive_group()
-    g.add_argument("--dry-run", action="store_true", help="show the plan only (default)")
+    g.add_argument("--dry-run", action="store_true", help="show the plan only; changes nothing (the default)")
     g.add_argument("--apply", action="store_true", help="execute the plan, then verify against the baseline")
+    sp.add_argument("-y", "--yes", action="store_true",
+                    help="with --apply: also run irreversible actions (stop processes, uninstall/reinstall packages, "
+                         "remove docker objects) without asking. Without it they are asked about on a terminal and "
+                         "refused otherwise")
     sp.add_argument("--include-info", action="store_true", help="also revert info-level items (e.g. new git-ignored build dirs)")
     sp.add_argument("--only", action="append", help="only actions whose finding id matches this glob (repeatable)")
     sp.add_argument("--format", choices=["text", "json"], default="text")

@@ -57,14 +57,22 @@ lnt diff
 ## 4. Undoing things: only with the user's go-ahead
 
 ```bash
-lnt revert            # dry run: prints the plan, changes nothing
-lnt revert --apply    # executes it, then re-checks each item against the baseline
+lnt revert                  # dry run (same as --dry-run): prints the plan, changes nothing
+lnt revert --apply          # runs the reversible actions, refuses irreversible ones without a terminal
+lnt revert --apply --yes    # also stops processes, uninstalls/reinstalls packages, removes docker objects
 ```
+
+The plan marks actions that cannot be undone (`! irreversible`): stopping a
+process, uninstalling or reinstalling a package, removing a docker container,
+volume, network or image. Everything else is reversible (files go to a trash
+folder, configs are restored from a baseline copy after the current version is
+saved).
 
 Rules for you, the agent:
 
 - Never run `lnt revert --apply` unless the user asked you to, or explicitly
-  agreed after seeing the dry-run plan. Use `--only '<finding-id-glob>'` to revert
+  agreed after seeing the dry-run plan. Add `--yes` only if the user agreed to the
+  irreversible actions in that plan; without it they are refused and reported. Use `--only '<finding-id-glob>'` to revert
   just the items they approved.
 - Never "clean up" by hand with `rm -rf`, `pkill`, `git config --unset` or
   `docker rm` instead. `lnt` checks before every action that the item is still
