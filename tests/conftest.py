@@ -40,4 +40,5 @@ def sandbox(tmp_path, monkeypatch):
 
 def lnt(sandbox, *args):
     return subprocess.run([sys.executable, os.path.join(ROOT, "scripts", "lnt")] + list(args),
-                          cwd=str(sandbox["repo"]), capture_output=True, text=True, env=dict(os.environ))
+                          cwd=str(sandbox["repo"]), capture_output=True, text=True, env=dict(os.environ),
+                          stdin=subprocess.DEVNULL, timeout=120)

@@ -7,6 +7,11 @@ Safety rules, enforced here and covered by tests:
   * Files are never deleted: created files are moved into the session trash, and a
     file being restored has its current version moved to the trash first.
   * Processes are signalled only if PID, start time and UID still match.
+  * File actions only ever target paths inside the watched roots (home, the repo,
+    the temp dirs, configured extra paths); anything else is refused.
+  * Every action is labelled reversible or not. Irreversible ones (stopping a process,
+    uninstalling/reinstalling a package, removing a docker object) need explicit
+    confirmation; see cli.cmd_revert.
 """
 from __future__ import annotations
 
@@ -91,7 +96,8 @@ def build_plan(diff, include_info=False, before_snapshot=None):
             else:
                 add("manual", f, "revert %s package %s by hand (was %s)" % (cat[4:], key, b.get("version")))
         elif cat == "process":
-            add("kill", f, "stop pid %s (started %s) and its new children" % (a.get("pid"), a.get("start")),
+            started = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(a["start"])) if a.get("start") else "?"
+            add("kill", f, "stop pid %s (started %s) and its new children" % (a.get("pid"), started),
                 pid=a.get("pid"), start=a.get("start"), uid=a.get("uid"), pgid=a.get("pgid"),
                 children=a.get("children", []), zombie=a.get("state") == "Z")
         elif cat == "port":
@@ -136,11 +142,46 @@ def build_plan(diff, include_info=False, before_snapshot=None):
         for v in b.get("values", []):
             cmds.append(["git", "config", "--global", "--add", key, v])
         add("git", f, " && ".join(_cmd_str(c) for c in cmds), cmds=cmds, expect_values=a.get("values"))
+    for x in actions:
+        _label(x)
     order = {"kill": 0, "command": 1, "crontab": 2, "trash": 3, "restore": 3, "git": 4, "covered": 5, "manual": 6}
     actions.sort(key=lambda x: (order.get(x["kind"], 9), x["n"]))
     for i, a in enumerate(actions, 1):
         a["n"] = i
     return actions
+
+
+# What each action kind can be undone with. "reversible" means lnt keeps what it
+# replaces (trash folder, baseline copy, recorded values), so the revert itself can be
+# rolled back by hand. Irreversible actions destroy state lnt has no copy of.
+_UNDO = {
+    "trash": (True, "the item is moved to the session trash folder, not deleted"),
+    "restore": (True, "the current version is moved to the session trash before the baseline copy is written"),
+    "git": (True, "the values being replaced are recorded in diff.json"),
+    "crontab": (True, "the current crontab is saved to the session trash before the baseline is installed"),
+    "covered": (True, "nothing runs; another action covers it"),
+    "manual": (True, "nothing runs; you decide"),
+    "kill": (False, "a stopped process cannot be resumed; its in-memory state is lost"),
+}
+
+
+def _label(a):
+    if a["kind"] == "command":
+        cat = a.get("category", "")
+        if cat.startswith("docker."):
+            note = "docker objects are removed for good (a volume's data, a container's filesystem)"
+        elif a.get("change") == "created":
+            note = "uninstalls the package; reinstalling needs the registry/network"
+        else:
+            note = "reinstalls the old version from the registry; needs network and may run install scripts"
+        a["reversible"], a["undo"] = False, note
+    else:
+        a["reversible"], a["undo"] = _UNDO.get(a["kind"], (False, "unknown action"))
+    return a
+
+
+def irreversible(plan):
+    return [a for a in plan if not a.get("reversible", False)]
 
 
 def _abs(diff, cat, key):
@@ -216,13 +257,46 @@ def _still_running(pid, start, uid):
     return bool(rec) and rec.get("state") != "Z"
 
 
-def apply_plan(actions, session, before_snapshot):
+def allowed_roots(before_snapshot):
+    """Directories a file action may touch: the ones lnt watches, nothing else."""
+    cfg = (before_snapshot or {}).get("config", {})
+    roots = [home(), cfg.get("repo_root")] + list(cfg.get("tmp_dirs") or []) + list(cfg.get("extra_dirs") or [])
+    files = list(cfg.get("extra_files") or [])
+    return [os.path.realpath(r) for r in roots if r], [os.path.realpath(f) for f in files if f]
+
+
+def path_allowed(path, roots, files=()):
+    """Strictly inside a watched root (never the root itself), or an explicitly listed file."""
+    if not path or not os.path.isabs(path.replace("#mcp", "")):
+        return False
+    real = os.path.join(os.path.realpath(os.path.dirname(path)), os.path.basename(path))
+    if real.endswith("#mcp"):
+        real = real[:-4]
+    if real in files:
+        return True
+    for r in roots:
+        if real != r and real.startswith(r.rstrip(os.sep) + os.sep):
+            return True
+    return False
+
+
+def apply_plan(actions, session, before_snapshot, refuse=()):
+    """Run the plan. Actions whose n is in `refuse` are not run (reported as refused)."""
     trash_root = os.path.join(session, "trash", time.strftime("%Y%m%d-%H%M%S"))
     backup_dir = os.path.join(session, "backup")
     baseline_pgids = {r.get("pgid") for r in before_snapshot["items"].get("process", {}).values()}
+    roots, files = allowed_roots(before_snapshot)
     results = []
     for a in actions:
         res = {"n": a["n"], "finding": a["finding"], "kind": a["kind"]}
+        if a["n"] in refuse:
+            res.update(status="refused", detail="irreversible (%s); not confirmed. Re-run with --yes to allow it." % a.get("undo", ""))
+            results.append(res)
+            continue
+        if a["kind"] in ("trash", "restore") and not path_allowed(a.get("path"), roots, files):
+            res.update(status="refused", detail="path is outside the directories lnt watches; not touching it")
+            results.append(res)
+            continue
         try:
             res.update(_apply_one(a, trash_root, backup_dir, baseline_pgids))
         except Exception as exc:  # report and keep going; one failure must not hide the rest
@@ -280,7 +354,7 @@ def _apply_one(a, trash_root, backup_dir, baseline_pgids):
         _atomic_write(path, data)
         if a.get("mode"):
             os.chmod(path, int(a["mode"], 8))
-        return {"status": "done"}
+        return {"status": "done", "detail": "restored from the baseline copy"}
     if kind == "command":
         ok, out = _run(a["cmd"])
         return {"status": "done" if ok else "failed", "detail": out}
@@ -296,6 +370,9 @@ def _apply_one(a, trash_root, backup_dir, baseline_pgids):
             return {"status": "failed", "detail": "crontab not available"}
         if a.get("expect") and sha256_text(current) != a["expect"]:
             return {"status": "skipped", "detail": "crontab changed since the diff; not touching it"}
+        saved = _trash_target("crontab.txt", trash_root)
+        with open(saved, "w", encoding="utf-8") as fh:
+            fh.write(current)
         baseline = ""
         if a.get("backup"):
             with open(os.path.join(backup_dir, a["backup"]), "r", encoding="utf-8") as fh:

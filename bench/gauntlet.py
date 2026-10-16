@@ -443,7 +443,7 @@ def run_gauntlet(idle_seconds=2.0, keep=False):
         # ---- revert
         p_dry, _ = lnt(sb, "revert", "--format", "json")
         plan = json.loads(p_dry.stdout)
-        p, t_rev = lnt(sb, "revert", "--apply", "--format", "json")
+        p, t_rev = lnt(sb, "revert", "--apply", "--yes", "--format", "json")
         rev = json.loads(p.stdout)
         # The harness is the parent of the processes it planted, so it must reap them once lnt has
         # stopped them; otherwise they linger as zombies of the harness (a real orphan is reaped by init).

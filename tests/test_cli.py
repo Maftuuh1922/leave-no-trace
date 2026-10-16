@@ -98,11 +98,11 @@ def test_process_is_stopped_only_if_identity_matches(sandbox):
             if f["category"] == "process":
                 f["after"]["start"] -= 1000  # pretend the PID was reused by another process
         plan_path.write_text(json.dumps(diff))
-        out = lnt(sandbox, "revert", "--apply").stdout
+        out = lnt(sandbox, "revert", "--apply", "--yes").stdout
         assert "different process" in out
         assert p.poll() is None, "must not signal a process whose start time does not match"
         lnt(sandbox, "diff")
-        lnt(sandbox, "revert", "--apply")
+        lnt(sandbox, "revert", "--apply", "--yes")
         p.wait(timeout=5)
     finally:
         if p.poll() is None:
@@ -181,7 +181,7 @@ def test_revert_exit_zero_when_stopped_process_is_not_reaped_yet(sandbox):
         time.sleep(0.5)
         assert lnt(sandbox, "diff").returncode == 1
         # this test process is the parent and is blocked in subprocess.run, so the child stays unreaped
-        r = lnt(sandbox, "revert", "--apply", "--format", "json")
+        r = lnt(sandbox, "revert", "--apply", "--yes", "--format", "json")
         assert r.returncode == 0, r.stdout + r.stderr
         report = json.loads(r.stdout)
         assert all(report["verified"].values()), report["verified"]
@@ -189,3 +189,152 @@ def test_revert_exit_zero_when_stopped_process_is_not_reaped_yet(sandbox):
     finally:
         if p.poll() is None:
             p.kill()
+
+
+# ---------------------------------------------------------------- rollback safety
+def _sleeper(sandbox):
+    p = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], cwd=str(sandbox["repo"]),
+                         start_new_session=True)
+    time.sleep(0.5)
+    return p
+
+
+def test_explicit_dry_run_flag_changes_nothing(sandbox):
+    gc = sandbox["home"] / ".gitconfig"
+    lnt(sandbox, "snapshot")
+    junk = sandbox["repo"] / "junk.txt"
+    junk.write_text("x")
+    subprocess.run(["git", "config", "--global", "user.email", "agent@x"], check=True)
+    changed = gc.read_bytes()
+    p = _sleeper(sandbox)
+    try:
+        assert lnt(sandbox, "diff").returncode == 1
+        state = sandbox["root"] / "state"
+        before = sorted(str(x) for x in state.rglob("*"))
+        for args in (("--dry-run",), ("--dry-run", "--yes"), ("--dry-run", "--format", "json")):
+            r = lnt(sandbox, "revert", *args)
+            assert r.returncode == 0, r.stderr
+        assert junk.exists() and gc.read_bytes() == changed and p.poll() is None
+        assert sorted(str(x) for x in state.rglob("*")) == before, "dry run must not write trash or reports"
+        assert "irreversible" in lnt(sandbox, "revert", "--dry-run").stdout
+        r = lnt(sandbox, "revert", "--dry-run", "--apply")
+        assert r.returncode == 2, "--dry-run and --apply are mutually exclusive"
+    finally:
+        p.kill()
+
+
+def test_plan_labels_what_can_be_undone(sandbox):
+    lnt(sandbox, "snapshot")
+    (sandbox["repo"] / "junk.txt").write_text("x")
+    p = _sleeper(sandbox)
+    try:
+        lnt(sandbox, "diff")
+        plan = json.loads(lnt(sandbox, "revert", "--format", "json").stdout)
+        by_kind = {a["kind"]: a for a in plan}
+        assert by_kind["trash"]["reversible"] is True
+        assert by_kind["kill"]["reversible"] is False and by_kind["kill"]["undo"]
+    finally:
+        p.kill()
+
+
+def test_irreversible_actions_refused_without_confirmation(sandbox):
+    lnt(sandbox, "snapshot")
+    junk = sandbox["repo"] / "junk.txt"
+    junk.write_text("x")
+    p = _sleeper(sandbox)
+    try:
+        lnt(sandbox, "diff")
+        r = lnt(sandbox, "revert", "--apply", "--format", "json")  # stdin is not a terminal here
+        assert r.returncode == 1, r.stdout
+        report = json.loads(r.stdout)
+        status = {x["kind"]: x["status"] for x in report["results"]}
+        assert status["kill"] == "refused" and status["trash"] == "done"
+        assert p.poll() is None, "a refused kill must not signal the process"
+        assert not junk.exists(), "reversible actions still run"
+        assert "--yes" in r.stderr
+        lnt(sandbox, "diff")
+        r = lnt(sandbox, "revert", "--apply", "--yes")
+        assert r.returncode == 0, r.stdout + r.stderr
+        p.wait(timeout=5)
+    finally:
+        if p.poll() is None:
+            p.kill()
+
+
+def test_file_actions_outside_watched_roots_are_refused(sandbox):
+    outside = sandbox["root"] / "outside.txt"
+    outside.write_text("keep me")
+    lnt(sandbox, "snapshot")
+    (sandbox["home"] / ".bashrc").write_text("export PATH=/x:$PATH\n")
+    assert ".bashrc" in lnt(sandbox, "diff").stdout
+    dpath = next((sandbox["root"] / "state").rglob("diff.json"))
+    diff = json.loads(dpath.read_text())
+    for f in diff["findings"]:
+        if f["category"] == "dotfile":
+            f["key"] = str(outside)  # a tampered or corrupt diff pointing elsewhere
+            f["id"] = "dotfile:" + str(outside)
+    dpath.write_text(json.dumps(diff))
+    r = lnt(sandbox, "revert", "--apply", "--format", "json")
+    assert outside.read_text() == "keep me"
+    assert any(x["status"] == "refused" for x in json.loads(r.stdout)["results"]), r.stdout
+
+
+def test_revert_refuses_a_different_user(sandbox):
+    lnt(sandbox, "snapshot")
+    junk = sandbox["repo"] / "junk.txt"
+    junk.write_text("x")
+    lnt(sandbox, "diff")
+    bpath = next((sandbox["root"] / "state").rglob("before.json"))
+    snap = json.loads(bpath.read_text())
+    snap["uid"] = os.getuid() + 1
+    bpath.write_text(json.dumps(snap))
+    r = lnt(sandbox, "revert", "--apply", "--yes")
+    assert r.returncode == 2 and "same user" in r.stderr
+    assert junk.exists()
+
+
+def _lnt_tty(sandbox, answer, *args):
+    """Run lnt with a pseudo-terminal on stdin/stdout and type `answer` at the prompt."""
+    import pty
+    import select
+    from conftest import ROOT
+    master, slave = pty.openpty()
+    p = subprocess.Popen([sys.executable, os.path.join(ROOT, "scripts", "lnt")] + list(args),
+                         cwd=str(sandbox["repo"]), stdin=slave, stdout=slave, stderr=slave, close_fds=True)
+    os.close(slave)
+    out, sent, deadline = b"", False, time.time() + 60
+    while time.time() < deadline:
+        r, _, _ = select.select([master], [], [], 0.2)
+        if r:
+            try:
+                chunk = os.read(master, 4096)
+            except OSError:
+                break
+            if not chunk:
+                break
+            out += chunk
+            if not sent and b"abort:" in out:
+                os.write(master, answer.encode() + b"\n")
+                sent = True
+        elif p.poll() is not None:
+            break
+    p.wait(timeout=10)
+    os.close(master)
+    return p.returncode, out.decode(errors="replace")
+
+
+def test_terminal_prompt_no_aborts_and_skip_keeps_irreversible(sandbox):
+    lnt(sandbox, "snapshot")
+    junk = sandbox["repo"] / "junk.txt"
+    junk.write_text("x")
+    p = _sleeper(sandbox)
+    try:
+        lnt(sandbox, "diff")
+        rc, out = _lnt_tty(sandbox, "n", "revert", "--apply")
+        assert "cannot be undone" in out and "aborted" in out, out
+        assert rc == 1 and junk.exists() and p.poll() is None
+        rc, out = _lnt_tty(sandbox, "s", "revert", "--apply")
+        assert rc == 1 and "refused" in out, out
+        assert not junk.exists() and p.poll() is None
+    finally:
+        p.kill()

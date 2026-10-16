@@ -677,6 +677,7 @@ def take_snapshot(cfg: Config, backup_dir=None, label="before"):
         "taken_at": int(time.time()),
         "platform": sys.platform,
         "pid": os.getpid(),
+        "uid": os.getuid() if hasattr(os, "getuid") else None,
         "self_pids": ctx.self_pids,
         "config": cfg.to_dict(),
         "status": ctx.status,

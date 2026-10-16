@@ -1,0 +1,78 @@
+$ lnt snapshot
+lnt: baseline saved (29 items, 0.02s) → ~/.local/state/lnt/myapp-b41ef5fdd89a/default
+lnt:   cron: missing
+lnt:   docker: disabled
+lnt:   packages: disabled
+
+$ sh ~/agent-session.sh
+agent: done!
+
+$ lnt diff
+━━ Leave No Trace receipt ━━
+repo: ~/myapp   session: 2026-10-16 10:57:48 → 2026-10-16 10:57:48
+This session left 8 things outside the requested work: 1 agent config/hook change, 2 running processes/ports/containers, 3 global environment changes, 2 leftover files.
+
+ 1. [AGENT-CONFIG] HIGH new agent config/hook: ~/.claude/settings.json
+      evidence: sha256 5f9af3c3405b, 90 B, mode 0o644
+      revert:   move to trash: ~/.claude/settings.json
+ 2. [RUNNING] MEDIUM new listening port 48765 (pid 8110)
+      evidence: pid 8110 started 2026-10-16 10:57:47
+      revert:   covered by stopping the process that owns port 48765
+ 3. [RUNNING] MEDIUM process still running: pid 8110 `python3 -m http.server 48765 --bind 127.0.0.1`
+      evidence: pid 8110, started 2026-10-16 10:57:47, cwd ~/myapp
+      revert:   stop pid 8110 (started 2026-10-16 10:57:47) and its new children
+ 4. [ENV] MEDIUM changed dotfile: ~/.bashrc
+      evidence: sha256 b685fa9d4a→9d358a2ff3, 66 B, mode 0o644
+      revert:   restore ~/.bashrc from the baseline copy
+ 5. [ENV] MEDIUM changed dotfile: ~/.gitconfig
+      evidence: sha256 668c077f86→3cd5ae44fe, 46 B, mode 0o644
+      revert:   restore ~/.gitconfig from the baseline copy
+ 6. [ENV] MEDIUM git config --global user.email = agent@example.com
+      revert:   covered by restoring the global git config file
+ 7. [LITTER] LOW new untracked file in repo: tmpclaude-3f2a-cwd
+      evidence: sha256 e3b0c44298fc, 0 B, mode 0o644
+      revert:   move to trash: tmpclaude-3f2a-cwd
+ 8. [LITTER] LOW new temp dir (195.3 KB): /tmp/lntdemo/claude-1000
+      evidence: 195.3 KB
+      revert:   move to trash: /tmp/lntdemo/claude-1000
+
+0 in-scope change(s), 0 ignored finding(s).
+(exit 1)
+
+$ lnt revert
+lnt revert plan (dry run; nothing was changed). Re-run with --apply to execute.
+  1. [kill] stop pid 8110 (started 2026-10-16 10:57:47) and its new children  ! irreversible
+      for: process:python3:8110
+  2. [trash] move to trash: ~/.claude/settings.json
+      for: agentconfig:~/.claude/settings.json
+  3. [restore] restore ~/.bashrc from the baseline copy
+      for: dotfile:~/.bashrc
+  4. [restore] restore ~/.gitconfig from the baseline copy
+      for: dotfile:~/.gitconfig
+  5. [trash] move to trash: tmpclaude-3f2a-cwd
+      for: repo.untracked:tmpclaude-3f2a-cwd
+  6. [trash] move to trash: /tmp/lntdemo/claude-1000
+      for: tmp:/tmp/lntdemo/claude-1000
+  7. [covered] covered by stopping the process that owns port 48765
+      for: port:tcp:48765
+  8. [covered] covered by restoring the global git config file
+      for: gitconfig:user.email
+lnt: 1 action(s) cannot be undone (stopping processes, uninstalling packages, removing docker objects); --apply asks before running them, or pass --yes.
+
+$ lnt revert --apply --yes
+  1. done         process:python3:8110 - SIGTERM
+  2. done         agentconfig:~/.claude/settings.json - moved to trash: ~/.claude/settings.json
+  3. done         dotfile:~/.bashrc - restored from the baseline copy
+  4. done         dotfile:~/.gitconfig - restored from the baseline copy
+  5. done         repo.untracked:tmpclaude-3f2a-cwd - moved to trash: ~/myapp/tmpclaude-3f2a-cwd
+  6. done         tmp:/tmp/lntdemo/claude-1000 - moved to trash: /tmp/lntdemo/claude-1000
+  7. skipped      port:tcp:48765 - covered by stopping the process that owns port 48765
+  8. skipped      gitconfig:user.email - covered by restoring the global git config file
+lnt: 8/8 reverted item(s) verified back at their baseline state. Trash: ~/.local/state/lnt/myapp-b41ef5fdd89a/default/trash/20261016-105748
+
+$ lnt diff
+━━ Leave No Trace receipt ━━
+repo: ~/myapp   session: 2026-10-16 10:57:48 → 2026-10-16 10:57:49
+Clean: nothing changed outside the requested work.
+
+0 in-scope change(s), 0 ignored finding(s).
